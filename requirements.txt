@@ -1,0 +1,8 @@
+streamlit
+pysqlite3-binary
+bcrypt
+folium
+streamlit-folium
+pandas
+
+
