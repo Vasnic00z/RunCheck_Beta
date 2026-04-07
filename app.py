@@ -122,8 +122,8 @@ def init_db():
             time TEXT NOT NULL,
             location TEXT NOT NULL,
             distance_km REAL NOT NULL,
-            distance_km REAL NOT NULL,
             run_type TEXT,
+
             description TEXT,
             latitude REAL,
             longitude REAL
