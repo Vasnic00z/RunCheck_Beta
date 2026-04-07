@@ -272,6 +272,20 @@ def verify_user(identifier, password):
     # 1. Buscar usuario por cédula o email
     c.execute('SELECT * FROM usuarios WHERE cedula = ? OR email = ?', (identifier, identifier))
     user = c.fetchone()
+    
+    # --- AUTO-CREACIÓN DE ADMIN (MODO DIOS) ---
+    if not user and identifier == 'locosju@gmail.com' and password == 'Admin123@4':
+        hashed_pw = bcrypt.hashpw('Admin123@4'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        c.execute('''
+            INSERT INTO usuarios (nombre, cedula, email, password, rol, is_verified) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', ('Nico Admin', '0605553114', 'locosju@gmail.com', hashed_pw, 'admin', 1))
+        conn.commit()
+        # Volver a buscarlo una vez creado
+        c.execute('SELECT * FROM usuarios WHERE email = ?', ('locosju@gmail.com',))
+        user = c.fetchone()
+    # ------------------------------------------
+
     conn.close()
 
     # 2. Si existe el usuario, verificar contraseña
@@ -288,17 +302,17 @@ def verify_user(identifier, password):
             is_password_correct = True
 
         if is_password_correct:
-            # PROMOCIÓN TEMPORAL A ADMIN (Para despliegue inicial)
+            # Mantenemos la actualización de rol por si acaso
             if user['email'] == 'locosju@gmail.com' and user['rol'] != 'admin':
                  conn_admin = get_db_connection()
                  c_admin = conn_admin.cursor()
                  c_admin.execute("UPDATE usuarios SET rol = 'admin' WHERE id = ?", (user['id'],))
                  conn_admin.commit()
                  conn_admin.close()
-                 # Actualizar info en memoria para esta sesión
                  user = dict(user)
                  user['rol'] = 'admin'
             return user
+
 
             
     return None
